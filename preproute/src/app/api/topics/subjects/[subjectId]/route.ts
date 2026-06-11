@@ -1,0 +1,38 @@
+import { NextResponse } from "next/server"
+
+export async function GET(request: Request , { params }: { params: { subjectId: string } }) {
+    const { subjectId } = await params;
+
+    try {
+
+        // 1. Hit your actual external backend server
+        const authHeader = request.headers.get('Authorization'); // Get token from incoming request
+        const backendResponse = await fetch(`${process.env.PREPROUTE_BACKEND_URL}/topics/subject/${subjectId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+        ...(authHeader && { 'Authorization': authHeader }), // Forwards token if it exists
+      },
+
+        });
+
+        const data = await backendResponse.json();
+        console.log("Received topics response from backend", data);
+
+        // 2. If the real backend rejects the login, forward that error to your frontend
+        if (!backendResponse.ok) {
+            return NextResponse.json(
+                { data: data.data },
+                { status: backendResponse.status }
+            );
+        }
+
+        // 3. Success! Return the user data / token back to your Next.js frontend
+        return NextResponse.json({
+            data
+        }, { status: 200 });
+    } catch (error: any) {
+        console.error("Login error:", error);
+        return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    }
+}
