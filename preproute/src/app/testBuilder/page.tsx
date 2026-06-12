@@ -1,3 +1,5 @@
+"use client";
+
 import TestBuilder from "../../components/testBuilder";
 
 export default function Home() {
@@ -28,6 +30,9 @@ export default function Home() {
       testDetails={defaultTestDetails} 
       onBack={handleBackNavigation} 
       navigateTo={handleNavigationMock} 
+      onSyncUpdatedMetrics={(finalCount, finalMarks, finalTopic, finalSubTopic) => {
+        console.log("Mock wrapper captured metrics sync:", { finalCount, finalMarks, finalTopic, finalSubTopic });
+      }}
     />
   );
 }
