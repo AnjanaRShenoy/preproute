@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 
 // 3. Make sure the matcher includes BOTH paths so the middleware triggers on them
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|gif)$).*)'],
 };
