@@ -5,25 +5,24 @@ import { NextResponse } from "next/server";
 // ==========================================
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  // 👑 FIXED: Added Promise type mapping wrapper matching Next.js App Router rules
+  { params }: { params: Promise<{ id: string }> } 
 ) {
   try {
-    const { id } =await params;
+    // 👑 FIXED: Safely unwrapping the route parameters asynchronously
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     
-    // Parse the incoming body modification payload from the UI
     const bodyData = await request.json();
-
-    // Grab the incoming JWT authorization token from client headers
     const authHeader = request.headers.get('Authorization'); 
     
-    // Core backend gateway URL configuration endpoint structure targeting test profiles
     const backendUrl = `${process.env.PREPROUTE_BACKEND_URL}/tests/${id}`;
 
     const backendResponse = await fetch(backendUrl, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(authHeader && { 'Authorization': authHeader }), // Forwards token securely
+        ...(authHeader && { 'Authorization': authHeader }), 
       },
       body: JSON.stringify(bodyData),
     });
@@ -50,13 +49,17 @@ export async function PUT(
 // ==========================================
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  // 👑 FIXED: Fully unified type definitions tracking asynchronous promises
+  { params }: { params: Promise<{ id: string }> } 
 ) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id; 
+    
     const authHeader = request.headers.get('Authorization'); 
     
     const backendUrl = `${process.env.PREPROUTE_BACKEND_URL}/tests/${id}`;
+    console.log(`🚀 Proxying test profile fetch for ID [${id}] to:`, backendUrl);
 
     const backendResponse = await fetch(backendUrl, {
       method: 'GET',
@@ -67,6 +70,7 @@ export async function GET(
     });
 
     const data = await backendResponse.json();
+    console.log("Received test profile response from backend", data);
 
     if (!backendResponse.ok) {
       return NextResponse.json(data, { status: backendResponse.status });

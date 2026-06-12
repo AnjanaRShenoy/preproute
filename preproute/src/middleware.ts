@@ -9,11 +9,11 @@ export function middleware(request: NextRequest) {
   // 1. If user is logged in, DON'T let them see the login page
   if (pathname === "/login" && token) {
     console.log("User is already logged in, redirecting to home page");
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // 2. If user is NOT logged in, DON'T let them see protected pages (like home)
-  if (pathname === "/" && !token) {
+  if (pathname !== "/login" && !token) {
     console.log("User is not authenticated, redirecting to login page");
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 
 // 3. Make sure the matcher includes BOTH paths so the middleware triggers on them
 export const config = {
-  matcher: ["/", "/login"],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

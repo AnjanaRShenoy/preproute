@@ -6,7 +6,7 @@ export async function GET(request: Request , { params }: { params: { selectedTop
     try {
         // 1. Hit your actual external backend server
         const authHeader = request.headers.get('Authorization'); // Get token from incoming request
-        const backendResponse = await fetch(`${process.env.PREPROUTE_BACKEND_URL}/topics/subject/${selectedTopic}`, {
+        const backendResponse = await fetch(`${process.env.PREPROUTE_BACKEND_URL}/sub-topics/topic/${selectedTopic}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
