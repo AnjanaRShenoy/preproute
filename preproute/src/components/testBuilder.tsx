@@ -317,7 +317,7 @@ export default function TestBuilder({ testDetails, navigateTo, onBack, onSyncUpd
         {/* HEADER */}
         <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-8 w-full shrink-0">
           <div className="relative w-40 h-10">
-            <Image src="/logos/Frame 1171277511.svg" alt="PrepRoute Logo" fill priority className="object-contain object-left" />
+            <Image src="/Frame 1171277511.svg" alt="PrepRoute Logo" fill priority className="object-contain object-left" />
           </div>
           <div className="flex items-center gap-6">
             <button type="button" className="relative p-2 text-slate-400 hover:text-slate-600 bg-slate-50 rounded-full border border-slate-100">

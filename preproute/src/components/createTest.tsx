@@ -451,7 +451,7 @@ export default function CreateTest({
         <div>
           <div className="p-6 flex items-center gap-2">
             <div className="relative w-40 h-10 mb-9">
-              <Image src="/logos/Frame 1171277511.svg" alt="PrepRoute Logo" fill priority className="object-contain object-left" />
+              <Image src="/Frame 1171277511.svg" alt="PrepRoute Logo" fill priority className="object-contain object-left" />
             </div>
           </div>
           <nav className="mt-4 px-3 space-y-1">
