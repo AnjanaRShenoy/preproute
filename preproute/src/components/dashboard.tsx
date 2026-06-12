@@ -115,11 +115,11 @@ export default function Dashboard() {
                     </div>
 
                     <nav className="mt-4 px-3 space-y-1">
-                        <a href="/dashboard" className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-800 font-medium rounded-lg transition">
+                        <a href="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium rounded-r-none rounded-l-xl border-r-4 border-blue-600 transition">
                             <LayoutDashboard size={18} />
                             <span>Dashboard</span>
                         </a>
-                        <a href="/" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium rounded-r-none rounded-l-xl border-r-4 border-blue-600 transition">
+                        <a href="/" className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-800 font-medium rounded-lg transition">
                             <FileEdit size={18} />
                             <span>Test Creation</span>
                         </a>
@@ -354,8 +354,8 @@ export default function Dashboard() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2 text-slate-400">
-                                                    <button className="p-1.5 hover:text-blue-500 hover:bg-slate-50 rounded-lg transition"onClick={() => router.push(`/edit/${test.id}`)}><Eye size={16} /></button>
-                                                    <button className="p-1.5 hover:text-amber-500 hover:bg-slate-50 rounded-lg transition"><Edit3 size={16} /></button>
+                                                    <button className="p-1.5 hover:text-blue-500 hover:bg-slate-50 rounded-lg transition" onClick={() => router.push(`/edit/${test.id}`)}><Eye size={16} /></button>
+                                                    <button className="p-1.5 hover:text-amber-500 hover:bg-slate-50 rounded-lg transition"  onClick={() => router.push(`/edit/${test.id}`)}><Edit3 size={16} /></button>
                                                     <button className="p-1.5 hover:text-red-500 hover:bg-slate-50 rounded-lg transition"><Trash2 size={16} /></button>
                                                 </div>
                                             </td>

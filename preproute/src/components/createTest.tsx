@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, LayoutDashboard, FileEdit, BarChart2 } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, FileEdit, BarChart2, AlertCircle } from 'lucide-react';
 import TestBuilder from './testBuilder';
 import Header from './header';
 import Image from 'next/image';
@@ -69,7 +69,7 @@ export default function CreateTest({
   const [topics, setTopics] = useState<Topic[]>([]);
   const [subTopics, setSubTopics] = useState<SubTopic[]>([]);
 
-  // Selection state parameters - initialize empty, will be resolved by UUID mappings downstream
+  // Selection state parameters
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [selectedSubTopics, setSelectedSubTopics] = useState<string[]>([]);
@@ -80,7 +80,10 @@ export default function CreateTest({
   const [createdTestId, setCreatedTestId] = useState(testIdToEdit || '');
   const [isCreatingTest, setIsCreatingTest] = useState(false);
 
-  // 👑 Dynamic preview states initialized directly from incoming payload to prevent empty text steps
+  // 👑 STATE ADDED: Stores API validation failure messages to render inside the UI
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  // Dynamic preview states initialized directly from incoming payload
   const [previewNoOfQuestions, setPreviewNoOfQuestions] = useState(initialDataToEdit?.total_questions || 0);
   const [previewTotalMarks, setPreviewTotalMarks] = useState(initialDataToEdit?.total_marks || 0);
   const [previewTopicName, setPreviewTopicName] = useState(
@@ -102,7 +105,6 @@ export default function CreateTest({
   const isDurationValid = duration.trim() !== "" && !isNaN(Number(duration)) && Number(duration) > 0;
   const isQuestionsCountValid = noOfQuestions.trim() !== "" && !isNaN(Number(noOfQuestions)) && Number(noOfQuestions) > 0;
 
-  // 👑 FIXED: Moved below variable definitions to prevent 'use before initialization' error
   const isFormInvalid =
     !selectedSubject ||
     !testName.trim() ||
@@ -120,9 +122,10 @@ export default function CreateTest({
 
   const myToken = getCookie('token');
 
-  // ==========================================
-  // RESOLVED MOUNTING & CASCADE SYNCHRONIZATION 
-  // ==========================================
+  // Clear API errors automatically when user modifies fields to re-try submission
+  useEffect(() => {
+    setApiError(null);
+  }, [testName, selectedSubject, testType]);
 
   // Effect A: Always fetch top level base subject entities array maps on mount
   useEffect(() => {
@@ -225,9 +228,7 @@ export default function CreateTest({
     return () => window.removeEventListener('click', handleWindowClickContext);
   }, [isTopicMenuOpen, isSubTopicMenuOpen]);
 
-  // ==========================================
-  // ASYNCHRONOUS DATA CONTEXT FETCH HANDLERS
-  // ==========================================
+  // Asynchronous content loading methods
   const fetchSubjects = async () => {
     if (hasFetchedSubjects) return;
     setLoading(true);
@@ -324,10 +325,12 @@ export default function CreateTest({
     });
   };
 
-  const handleCreateTestSubmit = async () => {
+  const executeTestConfigurationSubmit = async (targetWorkflow: 'draft' | 'builder') => {
     if (isFormInvalid || isCreatingTest) return;
 
     setIsCreatingTest(true);
+    setApiError(null); // Clear previous errors
+    
     try {
       const payload = {
         name: testName.trim(),
@@ -359,24 +362,30 @@ export default function CreateTest({
 
       const data = await response.json();
 
+      // 👑 RESOLVED: Intercept API errors and extract validation arrays parameters messages
       if (response.ok && (data.status === "success" || data.success)) {
         const realDatabaseId = data.data?.id || data.data?.uuid || testIdToEdit;
         setCreatedTestId(realDatabaseId);
         
-        // Update selection name trackers synchronously on pass transitions
         setPreviewNoOfQuestions(Number(noOfQuestions));
         setPreviewTotalMarks(totalMarks);
         setPreviewTopicName(selectedTopics.length === 1 ? (topics.find(t => String(t.id) === selectedTopics[0])?.name || 'Multiple') : `${selectedTopics.length} Topics configured`);
         setPreviewSubTopicName(selectedSubTopics.length === 1 ? (subTopics.find(st => String(st.id) === selectedSubTopics[0])?.name || 'Multiple') : `${selectedSubTopics.length} Subtopics configured`);
 
-        setStep(2);
+        if (targetWorkflow === 'draft') {
+          window.location.href = "/dashboard";
+        } else {
+          setStep(2);
+        }
       } else {
-        alert(`Operation failed: ${data.message || 'Server error'}`);
+        // 👑 Extract either the base message, or the first message from the backend nested errors array layout map
+        const errorFeedbackMessage = data.errors?.[0]?.msg || data.errors?.message || data.message || "An unresolved network operational fault occurred.";
+        setApiError(errorFeedbackMessage);
       }
     } catch (error) {
       console.error(error);
-      alert("A system network disruption blocked transmission logs.");
-    } finally {
+      setApiError("A critical network pipeline connection disruption blocked transmission.");
+    } {
       setIsCreatingTest(false);
     }
   };
@@ -450,7 +459,7 @@ export default function CreateTest({
               <LayoutDashboard size={18} />
               <span>Dashboard</span>
             </a>
-            <a href="/" className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-800 font-medium rounded-lg transition">
+            <a href="/" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium rounded-r-none rounded-l-xl border-r-4 border-blue-600 transition">
               <FileEdit size={18} />
               <span>Test Creation</span>
             </a>
@@ -678,16 +687,51 @@ export default function CreateTest({
             {noOfQuestions && !isQuestionsCountValid && <p className="text-[10px] font-bold text-red-500 mt-2">- Question fields must evaluate to a valid positive integer.</p>}
           </div>
 
-          {/* Action Row */}
-          <div className="flex justify-end gap-4 mt-12">
-            <button type="button" onClick={onCloseEditModal} className="px-8 py-2.5 bg-slate-50 hover:bg-slate-100 text-blue-600 font-semibold text-sm rounded-lg transition">Cancel</button>
+          {/* 👑 ADDED: LIVE API DYNAMIC ERROR BANNER CONTROL ELEMENT PANEL */}
+          {apiError && (
+            <div className="mt-8 max-w-5xl w-full bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 text-red-700 text-sm font-semibold shadow-sm animate-fade-in select-none">
+              <AlertCircle size={18} className="text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <span className="font-bold uppercase tracking-wider block text-[10px] text-red-500 mb-0.5">Configuration Conflict Rejected</span>
+                {apiError}
+              </div>
+            </div>
+          )}
+
+          {/* ACTION FOOTER */}
+          <div className="flex justify-end items-center gap-4 mt-12">
+            <button 
+              type="button" 
+              onClick={onCloseEditModal} 
+              className="px-6 py-2.5 text-slate-500 hover:text-slate-800 text-sm font-semibold transition"
+            >
+              Cancel
+            </button>
+            
             <button
               type="button"
               disabled={isFormInvalid || isCreatingTest}
-              onClick={handleCreateTestSubmit}
-              className={`px-8 py-2.5 font-semibold text-sm rounded-lg shadow-sm transition-all ${isFormInvalid || isCreatingTest ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-indigo-500 hover:bg-indigo-600 text-white'}`}
+              onClick={() => executeTestConfigurationSubmit('draft')}
+              className={`px-6 py-2.5 font-semibold text-sm rounded-lg border transition ${
+                isFormInvalid || isCreatingTest 
+                  ? 'border-slate-200 text-slate-300 cursor-not-allowed' 
+                  : 'border-blue-600 text-blue-600 hover:bg-blue-50/50'
+              }`}
             >
-              {isCreatingTest ? "Processing..." : testIdToEdit ? "Save" : "Next"}
+              Save as Draft
+            </button>
+
+            <button
+              type="button"
+              disabled={isFormInvalid || isCreatingTest}
+              onClick={() => executeTestConfigurationSubmit('builder')}
+              className={`px-8 py-2.5 font-semibold text-sm rounded-lg shadow-sm transition-all ${
+                isFormInvalid || isCreatingTest 
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {isCreatingTest ? "Processing..." : "Next to Add Questions"}
             </button>
           </div>
         </main>
