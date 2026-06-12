@@ -71,7 +71,7 @@ export default function PublishPreviewWorkspace({ testDetails, onBack }: Preview
           ? "📅 Test has been safely scheduled for automated platform publication!" 
           : "🎉 Test has been published live on the platform registry successfully!"
         );
-        window.location.href = "/dashboard";
+        window.location.href = "/";
       } else {
         alert(`Publication rejected: ${data.message || 'Server error'}`);
       }

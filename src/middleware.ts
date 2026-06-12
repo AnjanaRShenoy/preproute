@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
   // 1. If user is logged in, DON'T let them see the login page
   if (pathname === "/login" && token) {
     console.log("User is already logged in, redirecting to home page");
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   // 2. If user is NOT logged in, DON'T let them see protected pages (like home)

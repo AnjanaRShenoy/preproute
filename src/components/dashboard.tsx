@@ -115,11 +115,11 @@ export default function Dashboard() {
                     </div>
 
                     <nav className="mt-4 px-3 space-y-1">
-                        <a href="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium rounded-r-none rounded-l-xl border-r-4 border-blue-600 transition">
+                        <a href="/" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium rounded-r-none rounded-l-xl border-r-4 border-blue-600 transition">
                             <LayoutDashboard size={18} />
                             <span>Dashboard</span>
                         </a>
-                        <a href="/" className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-800 font-medium rounded-lg transition">
+                        <a href="/create-test" className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-800 font-medium rounded-lg transition">
                             <FileEdit size={18} />
                             <span>Test Creation</span>
                         </a>
@@ -146,7 +146,7 @@ export default function Dashboard() {
                             <p className="text-xs text-slate-400 mt-1">Manage, update configurations, and inspect performance evaluation models.</p>
                         </div>
                         <a
-                            href="/"
+                            href="/create-test"
                             className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition"
                         >
                             <Plus size={16} />

@@ -44,7 +44,7 @@ export default function Login() {
         }
 
         // 3. Redirect to the home page
-        router.push("/dashboard");
+        router.push("/");
         router.refresh(); // Tells Next.js to re-run the middleware for the home page route
       } else {
         alert(data.message || "Login failed");

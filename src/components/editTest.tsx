@@ -79,7 +79,7 @@ export default function EditTestPage() {
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center space-y-4">
                 <div className="text-sm font-semibold text-red-500">⚠️ Error: {error || "Record state missing"}</div>
                 <button
-                    onClick={() => router.push('/dashboard')}
+                    onClick={() => router.push('/')}
                     className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold shadow-sm"
                 >
                     Return to Dashboard
@@ -93,7 +93,7 @@ export default function EditTestPage() {
             <CreateTest
                 initialDataToEdit={testData}
                 testIdToEdit={testId}
-                onCloseEditModal={() => router.push('/dashboard')}
+                onCloseEditModal={() => router.push('/')}
             />
         </div>
     );

@@ -377,7 +377,7 @@ export default function CreateTest({
         setPreviewSubTopicName(selectedSubTopics.length === 1 ? (subTopics.find(st => String(st.id) === selectedSubTopics[0])?.name || 'Multiple') : `${selectedSubTopics.length} Subtopics configured`);
 
         if (targetWorkflow === 'draft') {
-          window.location.href = "/dashboard";
+          window.location.href = "/";
         } else {
           setStep(2);
         }
@@ -412,7 +412,7 @@ export default function CreateTest({
         }}
         navigateTo={(targetStep) => {
           if (targetStep === 'dashboard') {
-            window.location.href = "/dashboard";
+            window.location.href = "/";
           } else {
             setStep(targetStep);
           }
@@ -459,11 +459,11 @@ export default function CreateTest({
             </div>
           </div>
           <nav className="mt-4 px-3 space-y-1">
-            <a href="/dashboard" className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-800 font-medium rounded-lg transition">
+            <a href="/" className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-800 font-medium rounded-lg transition">
               <LayoutDashboard size={18} />
               <span>Dashboard</span>
             </a>
-            <a href="/" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium rounded-r-none rounded-l-xl border-r-4 border-blue-600 transition">
+            <a href="/create-test" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium rounded-r-none rounded-l-xl border-r-4 border-blue-600 transition">
               <FileEdit size={18} />
               <span>Test Creation</span>
             </a>
