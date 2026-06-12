@@ -84,7 +84,7 @@ export default function Login() {
             
             {/* Brand Logo */}
             <div className="relative w-40 h-10 mb-9">
-              <Image src="/prepRoute/logo.svg" alt="PrepRoute Logo"
+              <Image src="public\prepRoute\logo.svg" alt="PrepRoute Logo"
                 fill
                 priority
                 className="object-contain object-left"
