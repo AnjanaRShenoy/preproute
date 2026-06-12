@@ -261,8 +261,12 @@ export default function CreateTest({
           'Authorization': `Bearer ${myToken}`
         },
       });
-      const data = await response.json();
-      setTopics(data.data.data || []);
+      const resData = await response.json();
+
+      // 👑 THE FIX: Safely extract array regardless of whether it's nested or flat
+      const validatedTopicsArray = resData.data?.data || resData.data || [];
+      setTopics(validatedTopicsArray);
+
     } catch (error) {
       console.error("Error fetching topics:", error);
     } finally {
@@ -330,7 +334,7 @@ export default function CreateTest({
 
     setIsCreatingTest(true);
     setApiError(null); // Clear previous errors
-    
+
     try {
       const payload = {
         name: testName.trim(),
@@ -366,7 +370,7 @@ export default function CreateTest({
       if (response.ok && (data.status === "success" || data.success)) {
         const realDatabaseId = data.data?.id || data.data?.uuid || testIdToEdit;
         setCreatedTestId(realDatabaseId);
-        
+
         setPreviewNoOfQuestions(Number(noOfQuestions));
         setPreviewTotalMarks(totalMarks);
         setPreviewTopicName(selectedTopics.length === 1 ? (topics.find(t => String(t.id) === selectedTopics[0])?.name || 'Multiple') : `${selectedTopics.length} Topics configured`);
@@ -499,7 +503,7 @@ export default function CreateTest({
               <label className="text-sm font-semibold text-slate-700">Subject</label>
               <div className="relative">
                 <select
-                  className={`w-full appearance-none bg-white border border-slate-200 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-blue-400 transition ${selectedSubject ? 'text-slate-700' : 'text-slate-400'}`}
+                  className={`w-full appearance-none bg-white border border-slate-200 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-blue-400 transition text-slate-700`}
                   onFocus={fetchSubjects}
                   value={selectedSubject}
                   onChange={(e) => {
@@ -545,12 +549,17 @@ export default function CreateTest({
                 }}
                 className={`w-full flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 text-left transition ${!selectedSubject ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-white text-slate-700'}`}
               >
-                <span>
+                <span className="truncate pr-2">
+                  {/* 👑 THE FIX: Map selected IDs to their matching object names directly */}
                   {selectedTopics.length === 0
                     ? 'Select a topic'
-                    : `${selectedTopics.length} topic(s) selected`}
+                    : topics
+                      .filter(t => selectedTopics.includes(String(t.id)))
+                      .map(t => t.name)
+                      .join(', ')
+                  }
                 </span>
-                <ChevronDown size={18} className="text-slate-400" />
+                <ChevronDown size={18} className="text-slate-400 flex-shrink-0" />
               </button>
 
               {isTopicMenuOpen && selectedSubject && (
@@ -586,12 +595,17 @@ export default function CreateTest({
                 }}
                 className={`w-full flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 text-left transition ${selectedTopics.length === 0 ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-white text-slate-700'}`}
               >
-                <span>
+                <span className="truncate pr-2">
+                  {/* 👑 THE FIX: Map selected Sub Topic IDs to their matching object names */}
                   {selectedSubTopics.length === 0
                     ? 'Select a sub-topic'
-                    : `${selectedSubTopics.length} sub-topic(s) selected`}
+                    : subTopics
+                      .filter(st => selectedSubTopics.includes(String(st.id)))
+                      .map(st => st.name)
+                      .join(', ')
+                  }
                 </span>
-                <ChevronDown size={18} className="text-slate-400" />
+                <ChevronDown size={18} className="text-slate-400 flex-shrink-0" />
               </button>
 
               {isSubTopicMenuOpen && selectedTopics.length > 0 && (
@@ -700,23 +714,22 @@ export default function CreateTest({
 
           {/* ACTION FOOTER */}
           <div className="flex justify-end items-center gap-4 mt-12">
-            <button 
-              type="button" 
-              onClick={onCloseEditModal} 
+            <button
+              type="button"
+              onClick={onCloseEditModal}
               className="px-6 py-2.5 text-slate-500 hover:text-slate-800 text-sm font-semibold transition"
             >
               Cancel
             </button>
-            
+
             <button
               type="button"
               disabled={isFormInvalid || isCreatingTest}
               onClick={() => executeTestConfigurationSubmit('draft')}
-              className={`px-6 py-2.5 font-semibold text-sm rounded-lg border transition ${
-                isFormInvalid || isCreatingTest 
-                  ? 'border-slate-200 text-slate-300 cursor-not-allowed' 
-                  : 'border-blue-600 text-blue-600 hover:bg-blue-50/50'
-              }`}
+              className={`px-6 py-2.5 font-semibold text-sm rounded-lg border transition ${isFormInvalid || isCreatingTest
+                ? 'border-slate-200 text-slate-300 cursor-not-allowed'
+                : 'border-blue-600 text-blue-600 hover:bg-blue-50/50'
+                }`}
             >
               Save as Draft
             </button>
@@ -725,11 +738,10 @@ export default function CreateTest({
               type="button"
               disabled={isFormInvalid || isCreatingTest}
               onClick={() => executeTestConfigurationSubmit('builder')}
-              className={`px-8 py-2.5 font-semibold text-sm rounded-lg shadow-sm transition-all ${
-                isFormInvalid || isCreatingTest 
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
+              className={`px-8 py-2.5 font-semibold text-sm rounded-lg shadow-sm transition-all ${isFormInvalid || isCreatingTest
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
             >
               {isCreatingTest ? "Processing..." : "Next to Add Questions"}
             </button>

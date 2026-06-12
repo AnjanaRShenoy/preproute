@@ -297,7 +297,7 @@ export default function TestBuilder({ testDetails, navigateTo, onBack, onSyncUpd
       <aside className="w-16 bg-white border-r border-slate-100 flex flex-col items-center py-4 justify-between fixed h-full z-20">
         <div className="flex flex-col items-center gap-6 w-full">
           <nav className="flex flex-col items-center gap-2 w-full px-2">
-            <button type="button" className="p-2.5 text-slate-400 hover:text-slate-600 rounded-lg transition"><LineChart size={18} /></button>
+            <button type="button" className="p-2.5 text-slate-400 hover:text-slate-600 rounded-lg transition" onClick={() => navigateTo("dashboard")}><LineChart size={18} /></button>
             <button type="button" className="p-2.5 bg-blue-50 text-blue-600 rounded-lg transition"><FileText size={18} /></button>
             <button type="button" className="p-2.5 text-slate-400 hover:text-slate-600 rounded-lg transition"><HelpCircle size={18} /></button>
             <button type="button" className="p-2.5 text-slate-400 hover:text-slate-600 rounded-lg transition"><Copy size={18} /></button>
