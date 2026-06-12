@@ -69,7 +69,7 @@ export default function Login() {
         <div className="hidden md:flex flex-1 items-center justify-center">
           <div className="w-4/5 max-w-[450px] relative aspect-square flex justify-center items-center">
             <Image
-              src="\login\group.png"
+              src="/login/group.png"
               alt="Login illustration"
               fill
               priority
