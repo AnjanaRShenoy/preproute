@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, LayoutDashboard, FileEdit, BarChart2, AlertCircle } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, FileEdit, BarChart2, AlertCircle, Menu, X } from 'lucide-react';
 import TestBuilder from './testBuilder';
 import Header from './header';
 import Image from 'next/image';
@@ -39,6 +39,9 @@ export default function CreateTest({
   testIdToEdit,
   onCloseEditModal
 }: CreateTestProps) {
+  // Mobile Responsive Sidebar State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   // Base State Initializations
   const [testType, setTestType] = useState(initialDataToEdit?.type || "chapterwise");
   const [testName, setTestName] = useState(initialDataToEdit?.name || "");
@@ -80,10 +83,9 @@ export default function CreateTest({
   const [createdTestId, setCreatedTestId] = useState(testIdToEdit || '');
   const [isCreatingTest, setIsCreatingTest] = useState(false);
 
-  // 👑 STATE ADDED: Stores API validation failure messages to render inside the UI
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // Dynamic preview states initialized directly from incoming payload
+  // Dynamic preview states
   const [previewNoOfQuestions, setPreviewNoOfQuestions] = useState(initialDataToEdit?.total_questions || 0);
   const [previewTotalMarks, setPreviewTotalMarks] = useState(initialDataToEdit?.total_marks || 0);
   const [previewTopicName, setPreviewTopicName] = useState(
@@ -98,7 +100,6 @@ export default function CreateTest({
   );
 
   const activeSubjectObj = subjects.find(s => String(s.id) === String(selectedSubject));
-
   const validQuestionsNum = parseInt(noOfQuestions) || 0;
   const totalMarks = validQuestionsNum * marking.correct;
 
@@ -122,17 +123,14 @@ export default function CreateTest({
 
   const myToken = getCookie('token');
 
-  // Clear API errors automatically when user modifies fields to re-try submission
   useEffect(() => {
     setApiError(null);
   }, [testName, selectedSubject, testType]);
 
-  // Effect A: Always fetch top level base subject entities array maps on mount
   useEffect(() => {
     fetchSubjects();
   }, []);
 
-  // Effect B: Automatically convert text name keys into system database UUID values
   useEffect(() => {
     if (subjects.length === 0) return;
 
@@ -216,7 +214,6 @@ export default function CreateTest({
     resolveMetadataNamesToSystemUuids();
   }, [initialDataToEdit, subjects]);
 
-  // Click outside menus helper handler toggles
   useEffect(() => {
     const handleWindowClickContext = () => {
       setIsTopicMenuOpen(false);
@@ -228,7 +225,6 @@ export default function CreateTest({
     return () => window.removeEventListener('click', handleWindowClickContext);
   }, [isTopicMenuOpen, isSubTopicMenuOpen]);
 
-  // Asynchronous content loading methods
   const fetchSubjects = async () => {
     if (hasFetchedSubjects) return;
     setLoading(true);
@@ -262,11 +258,8 @@ export default function CreateTest({
         },
       });
       const resData = await response.json();
-
-      // 👑 THE FIX: Safely extract array regardless of whether it's nested or flat
       const validatedTopicsArray = resData.data?.data || resData.data || [];
       setTopics(validatedTopicsArray);
-
     } catch (error) {
       console.error("Error fetching topics:", error);
     } finally {
@@ -333,7 +326,7 @@ export default function CreateTest({
     if (isFormInvalid || isCreatingTest) return;
 
     setIsCreatingTest(true);
-    setApiError(null); // Clear previous errors
+    setApiError(null);
 
     try {
       const payload = {
@@ -366,7 +359,6 @@ export default function CreateTest({
 
       const data = await response.json();
 
-      // 👑 RESOLVED: Intercept API errors and extract validation arrays parameters messages
       if (response.ok && (data.status === "success" || data.success)) {
         const realDatabaseId = data.data?.id || data.data?.uuid || testIdToEdit;
         setCreatedTestId(realDatabaseId);
@@ -382,14 +374,13 @@ export default function CreateTest({
           setStep(2);
         }
       } else {
-        // 👑 Extract either the base message, or the first message from the backend nested errors array layout map
         const errorFeedbackMessage = data.errors?.[0]?.msg || data.errors?.message || data.message || "An unresolved network operational fault occurred.";
         setApiError(errorFeedbackMessage);
       }
     } catch (error) {
       console.error(error);
       setApiError("A critical network pipeline connection disruption blocked transmission.");
-    } {
+    } finally {
       setIsCreatingTest(false);
     }
   };
@@ -449,21 +440,36 @@ export default function CreateTest({
   }
 
   return (
-    <div className="flex h-screen w-screen bg-slate-50 text-slate-700 font-sans overflow-hidden">
-      {/* SIDEBAR CONTAINER */}
-      <aside className="w-64 bg-white border-r border-slate-100 flex flex-col justify-between fixed h-full z-20">
+    <div className="flex min-h-screen w-full bg-slate-50 text-slate-700 font-sans overflow-x-hidden">
+      
+      {/* MOBILE OVERLAY BACKDROP */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 z-40 lg:hidden backdrop-blur-xs"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* RESPONSIVE SIDEBAR CONTAINER */}
+      <aside className={`w-64 bg-white border-r border-slate-100 flex flex-col justify-between fixed h-full z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div>
-          <div className="p-6 flex items-center gap-2">
-            <div className="relative w-40 h-10 mb-9">
-              <Image src="\prepRoute\logo.svg" alt="PrepRoute Logo" fill priority className="object-contain object-left" />
+          <div className="p-6 flex items-center justify-between gap-2">
+            <div className="relative w-40 h-10">
+              <Image src="/prepRoute/logo.svg" alt="PrepRoute Logo" fill priority className="object-contain object-left" />
             </div>
+            <button 
+              className="lg:hidden p-1 text-slate-400 hover:text-slate-700"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <X size={20} />
+            </button>
           </div>
           <nav className="mt-4 px-3 space-y-1">
             <a href="/" className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-800 font-medium rounded-lg transition">
               <LayoutDashboard size={18} />
               <span>Dashboard</span>
             </a>
-            <a href="/create-test" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium rounded-r-none rounded-l-xl border-r-4 border-blue-600 transition">
+            <a href="/create-test" className="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-medium lg:rounded-r-none lg:rounded-l-xl rounded-lg lg:border-r-4 border-blue-600 transition">
               <FileEdit size={18} />
               <span>Test Creation</span>
             </a>
@@ -476,34 +482,55 @@ export default function CreateTest({
       </aside>
 
       {/* CORE INPUT CONTAINER */}
-      <div className="flex-1 flex flex-col ml-64 h-full relative overflow-y-auto">
+      <div className="flex-1 flex flex-col lg:ml-64 w-full relative min-h-screen">
+        
+        {/* MOBILE STICKY TOP BAR INTERFACE */}
+        <div className="lg:hidden flex items-center justify-between bg-white border-b border-slate-100 px-4 py-3 z-30 sticky top-0">
+          <button 
+            type="button" 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 text-slate-600 hover:bg-slate-50 rounded-lg"
+          >
+            <Menu size={22} />
+          </button>
+          <div className="relative w-28 h-7">
+            <Image src="/prepRoute/logo.svg" alt="PrepRoute Logo" fill priority className="object-contain" />
+          </div>
+          <div className="w-8" /> {/* Layout placeholder spacer */}
+        </div>
+
         <Header testType={testType} />
-        <main className="p-8 max-w-5xl w-full mx-auto flex-1">
-          <div className="text-xs text-slate-400 font-medium mb-6 flex gap-2">
+        
+        <main className="p-4 sm:p-6 lg:p-8 max-w-5xl w-full mx-auto flex-1">
+          <div className="text-xs text-slate-400 font-medium mb-4 lg:mb-6 flex flex-wrap gap-2">
             <span>Test Creation</span> / <span>Create Test</span> / <span className="text-slate-600">{testType}</span>
           </div>
 
-          <div className="inline-flex bg-slate-100 p-1 rounded-xl mb-8">
-            {['Chapter Wise', 'PYQ', 'Mock Test'].map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setTestType(tab)}
-                className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${testType === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                {tab}
-              </button>
-            ))}
+          {/* Tab buttons switcher scroll wrapper */}
+          <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 lg:mb-8">
+            <div className="inline-flex bg-slate-100 p-1 rounded-xl whitespace-nowrap">
+              {['Chapter Wise', 'PYQ', 'Mock Test'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setTestType(tab)}
+                  className={`px-4 sm:px-6 py-2 text-sm font-medium rounded-lg transition-all ${testType === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* INPUT FORMS FIELDS LAYOUT LAYER */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-x-12 lg:gap-y-6">
+            
             {/* Subject Dropdown */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-slate-700">Subject</label>
               <div className="relative">
                 <select
-                  className={`w-full appearance-none bg-white border border-slate-200 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-blue-400 transition text-slate-700`}
+                  className="w-full appearance-none bg-white border border-slate-200 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-blue-400 transition text-slate-700 text-sm sm:text-base"
                   onFocus={fetchSubjects}
                   value={selectedSubject}
                   onChange={(e) => {
@@ -533,7 +560,7 @@ export default function CreateTest({
                 value={testName}
                 onChange={(e) => setTestName(e.target.value)}
                 placeholder="Enter name of Test"
-                className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 placeholder-slate-300 text-slate-700 focus:outline-none focus:border-blue-400 transition"
+                className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 placeholder-slate-300 text-slate-700 text-sm sm:text-base focus:outline-none focus:border-blue-400 transition"
               />
             </div>
 
@@ -547,10 +574,9 @@ export default function CreateTest({
                   setIsSubTopicMenuOpen(false);
                   setIsTopicMenuOpen(!isTopicMenuOpen);
                 }}
-                className={`w-full flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 text-left transition ${!selectedSubject ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-white text-slate-700'}`}
+                className={`w-full flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 text-left text-sm sm:text-base transition ${!selectedSubject ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-white text-slate-700'}`}
               >
                 <span className="truncate pr-2">
-                  {/* 👑 THE FIX: Map selected IDs to their matching object names directly */}
                   {selectedTopics.length === 0
                     ? 'Select a topic'
                     : topics
@@ -593,10 +619,9 @@ export default function CreateTest({
                     handleSubTopicMenuFocusFetch();
                   }
                 }}
-                className={`w-full flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 text-left transition ${selectedTopics.length === 0 ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-white text-slate-700'}`}
+                className={`w-full flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 text-left text-sm sm:text-base transition ${selectedTopics.length === 0 ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-white text-slate-700'}`}
               >
                 <span className="truncate pr-2">
-                  {/* 👑 THE FIX: Map selected Sub Topic IDs to their matching object names */}
                   {selectedSubTopics.length === 0
                     ? 'Select a sub-topic'
                     : subTopics
@@ -639,7 +664,7 @@ export default function CreateTest({
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="Enter the time"
-                className={`w-full bg-white border rounded-lg px-4 py-3 placeholder-slate-300 text-slate-700 focus:outline-none transition ${duration && !isDurationValid ? 'border-red-400 focus:border-red-400 bg-red-50/10' : 'border-slate-200 focus:border-blue-400'}`}
+                className={`w-full bg-white border rounded-lg px-4 py-3 placeholder-slate-300 text-slate-700 text-sm sm:text-base focus:outline-none transition ${duration && !isDurationValid ? 'border-red-400 focus:border-red-400 bg-red-50/10' : 'border-slate-200 focus:border-blue-400'}`}
               />
               {duration && !isDurationValid && <p className="text-[10px] font-bold text-red-500">- Duration value must evaluate onto a valid positive integer numeric value.</p>}
             </div>
@@ -647,7 +672,7 @@ export default function CreateTest({
             {/* Difficulty selectors */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-slate-700">Test Difficulty Level</label>
-              <div className="flex items-center gap-6 h-full py-3">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6 h-full py-2 sm:py-3">
                 {['Easy', 'Medium', 'Difficult'].map((level) => (
                   <label key={level} className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-600 select-none">
                     <input
@@ -668,18 +693,18 @@ export default function CreateTest({
           {/* Marking Weight Systems Panel */}
           <div className="mt-8">
             <h3 className="text-sm font-semibold text-slate-700 mb-4">Marking Scheme:</h3>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 lg:gap-6 items-end">
               <div className="flex flex-col gap-2">
                 <label className="text-xs text-slate-600 font-medium">Wrong Answer</label>
-                <input type="number" value={marking.wrong} onChange={(e) => setMarking(prev => ({ ...prev, wrong: parseInt(e.target.value) || 0 }))} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-medium focus:outline-none" />
+                <input type="number" value={marking.wrong} onChange={(e) => setMarking(prev => ({ ...prev, wrong: parseInt(e.target.value) || 0 }))} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-medium focus:outline-none text-sm" />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-xs text-slate-600 font-medium">Unattempted</label>
-                <input type="number" value={marking.unattempted} onChange={(e) => setMarking(prev => ({ ...prev, unattempted: parseInt(e.target.value) || 0 }))} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-medium focus:outline-none" />
+                <input type="number" value={marking.unattempted} onChange={(e) => setMarking(prev => ({ ...prev, unattempted: parseInt(e.target.value) || 0 }))} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-medium focus:outline-none text-sm" />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-xs text-slate-600 font-medium">Correct Answer</label>
-                <input type="number" value={marking.correct} onChange={(e) => setMarking(prev => ({ ...prev, correct: parseInt(e.target.value) || 0 }))} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-medium focus:outline-none" />
+                <input type="number" value={marking.correct} onChange={(e) => setMarking(prev => ({ ...prev, correct: parseInt(e.target.value) || 0 }))} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-medium focus:outline-none text-sm" />
               </div>
 
               <div className="flex flex-col gap-2">
@@ -689,21 +714,21 @@ export default function CreateTest({
                   placeholder="Ex: 45"
                   value={noOfQuestions}
                   onChange={(e) => setNoOfQuestions(e.target.value)}
-                  className={`w-full bg-white border rounded-lg px-3 py-2.5 placeholder-slate-300 text-slate-700 focus:outline-none font-medium ${noOfQuestions && !isQuestionsCountValid ? 'border-red-400 bg-red-50/10' : 'border-slate-200 focus:border-blue-400'}`}
+                  className={`w-full bg-white border rounded-lg px-3 py-2.5 placeholder-slate-300 text-slate-700 focus:outline-none font-medium text-sm ${noOfQuestions && !isQuestionsCountValid ? 'border-red-400 bg-red-50/10' : 'border-slate-200 focus:border-blue-400'}`}
                 />
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 sm:col-span-2 md:col-span-1">
                 <label className="text-xs text-slate-400 font-medium">Total Marks</label>
-                <input type="text" disabled value={totalMarks > 0 ? `${totalMarks} Marks` : ""} placeholder="Ex: 225 Marks" className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5 placeholder-slate-300 text-slate-700 font-semibold cursor-not-allowed" />
+                <input type="text" disabled value={totalMarks > 0 ? `${totalMarks} Marks` : ""} placeholder="Ex: 225 Marks" className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5 placeholder-slate-300 text-slate-700 font-semibold cursor-not-allowed text-sm" />
               </div>
             </div>
             {noOfQuestions && !isQuestionsCountValid && <p className="text-[10px] font-bold text-red-500 mt-2">- Question fields must evaluate to a valid positive integer.</p>}
           </div>
 
-          {/* 👑 ADDED: LIVE API DYNAMIC ERROR BANNER CONTROL ELEMENT PANEL */}
+          {/* LIVE API DYNAMIC ERROR BANNER CONTROL ELEMENT PANEL */}
           {apiError && (
-            <div className="mt-8 max-w-5xl w-full bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 text-red-700 text-sm font-semibold shadow-sm animate-fade-in select-none">
+            <div className="mt-6 sm:mt-8 max-w-5xl w-full bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 text-red-700 text-sm font-semibold shadow-sm animate-fade-in select-none">
               <AlertCircle size={18} className="text-red-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <span className="font-bold uppercase tracking-wider block text-[10px] text-red-500 mb-0.5">Configuration Conflict Rejected</span>
@@ -713,11 +738,11 @@ export default function CreateTest({
           )}
 
           {/* ACTION FOOTER */}
-          <div className="flex justify-end items-center gap-4 mt-12">
+          <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3 sm:gap-4 mt-8 sm:mt-12 mb-6">
             <button
               type="button"
               onClick={onCloseEditModal}
-              className="px-6 py-2.5 text-slate-500 hover:text-slate-800 text-sm font-semibold transition"
+              className="px-6 py-2.5 text-slate-500 hover:text-slate-800 text-sm font-semibold transition text-center order-3 sm:order-1"
             >
               Cancel
             </button>
@@ -726,7 +751,7 @@ export default function CreateTest({
               type="button"
               disabled={isFormInvalid || isCreatingTest}
               onClick={() => executeTestConfigurationSubmit('draft')}
-              className={`px-6 py-2.5 font-semibold text-sm rounded-lg border transition ${isFormInvalid || isCreatingTest
+              className={`px-6 py-2.5 font-semibold text-sm rounded-lg border transition text-center order-2 ${isFormInvalid || isCreatingTest
                 ? 'border-slate-200 text-slate-300 cursor-not-allowed'
                 : 'border-blue-600 text-blue-600 hover:bg-blue-50/50'
                 }`}
@@ -738,7 +763,7 @@ export default function CreateTest({
               type="button"
               disabled={isFormInvalid || isCreatingTest}
               onClick={() => executeTestConfigurationSubmit('builder')}
-              className={`px-8 py-2.5 font-semibold text-sm rounded-lg shadow-sm transition-all ${isFormInvalid || isCreatingTest
+              className={`px-8 py-2.5 font-semibold text-sm rounded-lg shadow-sm transition-all text-center order-1 sm:order-3 ${isFormInvalid || isCreatingTest
                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}

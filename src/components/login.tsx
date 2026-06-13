@@ -16,9 +16,9 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError(""); // 👑 Clear any previous errors on a fresh attempt
+
     try {
-      // Making the API call to your Next.js API Route
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -28,26 +28,20 @@ export default function Login() {
       });
 
       const data = await response.json();
+
       if (response.ok) {
-        // 1. Grab the token from your nested backend data structure
-        // Looking back at your Postman screenshot, it comes back as data.data.token
         const token = data.token || data.data?.token;
 
         if (token) {
-          // 2. Set the cookie using document.cookie
-          // - path=/: available across your entire app
-          // - max-age: cookie lifetime in seconds (e.g., 7 days)
-          // - SameSite=Lax; Secure: security best practices
           document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax; Secure`;
-
           console.log("Cookie successfully set!");
         }
 
-        // 3. Redirect to the home page
         router.push("/");
-        router.refresh(); // Tells Next.js to re-run the middleware for the home page route
+        router.refresh();
       } else {
-        alert(data.message || "Login failed");
+        // 👑 THE FIX: Set the error state instead of using alert()
+        setError(data.message || "Access denied. Invalid credentials.");
       }
 
       if (!response.ok) {
@@ -89,6 +83,16 @@ export default function Login() {
             {/* Form Header */}
             <h2 className="text-xl font-semibold text-slate-800 mb-2">Login</h2>
             <p className="text-xs text-slate-500 mb-9">Use your company provided Login credentials</p>
+
+            {/* Inline Error Notification Banner */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-2 animate-fade-in">
+                <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{error}</span>
+              </div>
+            )}
 
             {/* Login Form */}
             <form className="flex flex-col flex-1" onSubmit={handleSubmit}>
