@@ -43,7 +43,7 @@ export default function CreateTest({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Base State Initializations
-  const [testType, setTestType] = useState(initialDataToEdit?.type || "chapterwise");
+  const [testType, setTestType] = useState("Chapter Wise");
   const [testName, setTestName] = useState(initialDataToEdit?.name || "");
   const [difficulty, setDifficulty] = useState(
     initialDataToEdit?.difficulty
@@ -269,6 +269,7 @@ export default function CreateTest({
 
   const handleSubTopicMenuFocusFetch = async () => {
     if (selectedTopics.length === 0) return;
+    if (subTopics.length > 0) return;
     setLoading(true);
     try {
       let response;
@@ -441,10 +442,10 @@ export default function CreateTest({
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50 text-slate-700 font-sans overflow-x-hidden">
-      
+
       {/* MOBILE OVERLAY BACKDROP */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/40 z-40 lg:hidden backdrop-blur-xs"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -457,7 +458,7 @@ export default function CreateTest({
             <div className="relative w-40 h-10">
               <Image src="/prepRoute/logo.svg" alt="PrepRoute Logo" fill priority className="object-contain object-left" />
             </div>
-            <button 
+            <button
               className="lg:hidden p-1 text-slate-400 hover:text-slate-700"
               onClick={() => setIsSidebarOpen(false)}
             >
@@ -483,11 +484,11 @@ export default function CreateTest({
 
       {/* CORE INPUT CONTAINER */}
       <div className="flex-1 flex flex-col lg:ml-64 w-full relative min-h-screen">
-        
+
         {/* MOBILE STICKY TOP BAR INTERFACE */}
         <div className="lg:hidden flex items-center justify-between bg-white border-b border-slate-100 px-4 py-3 z-30 sticky top-0">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={() => setIsSidebarOpen(true)}
             className="p-2 text-slate-600 hover:bg-slate-50 rounded-lg"
           >
@@ -500,7 +501,7 @@ export default function CreateTest({
         </div>
 
         <Header testType={testType} />
-        
+
         <main className="p-4 sm:p-6 lg:p-8 max-w-5xl w-full mx-auto flex-1">
           <div className="text-xs text-slate-400 font-medium mb-4 lg:mb-6 flex flex-wrap gap-2">
             <span>Test Creation</span> / <span>Create Test</span> / <span className="text-slate-600">{testType}</span>
@@ -524,7 +525,7 @@ export default function CreateTest({
 
           {/* INPUT FORMS FIELDS LAYOUT LAYER */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-x-12 lg:gap-y-6">
-            
+
             {/* Subject Dropdown */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-slate-700">Subject</label>
@@ -615,9 +616,6 @@ export default function CreateTest({
                   setIsTopicMenuOpen(false);
                   const targetNextOpenState = !isSubTopicMenuOpen;
                   setIsSubTopicMenuOpen(targetNextOpenState);
-                  if (targetNextOpenState) {
-                    handleSubTopicMenuFocusFetch();
-                  }
                 }}
                 className={`w-full flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 text-left text-sm sm:text-base transition ${selectedTopics.length === 0 ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-white text-slate-700'}`}
               >
