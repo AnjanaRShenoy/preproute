@@ -16,7 +16,7 @@ interface TestRecord {
     name: string;
     subject: string;
     topics: string[];
-    status: 'draft' | 'live' | null | undefined;
+    status: 'draft' | 'live' | 'scheduled' | null | undefined;
     created_at: string;
 }
 
@@ -24,9 +24,9 @@ export default function Dashboard() {
     const router = useRouter();
     const [tests, setTests] = useState<TestRecord[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'live' | 'draft'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'live' | 'draft' | 'scheduled'>('all');
     const [isLoading, setIsLoading] = useState(true);
-    
+
     // Mobile View Drawer Menu Toggle State
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -95,7 +95,7 @@ export default function Dashboard() {
 
             {/* MOBILE TOP BAR TOGGLE BUTTON */}
             <div className="md:hidden fixed top-4 left-4 z-30">
-                <button 
+                <button
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     className="p-2.5 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 focus:outline-none"
                 >
@@ -141,7 +141,7 @@ export default function Dashboard() {
 
             {/* MOBILE DRAWER BLACKOUT OVERLAY FRAME */}
             {isMobileMenuOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-10 md:hidden"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
@@ -210,14 +210,14 @@ export default function Dashboard() {
 
                         <div className="flex items-center gap-1.5 overflow-x-auto self-start md:self-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
                             <Filter size={14} className="text-slate-400 mr-1 flex-shrink-0" />
-                            {(['all', 'live', 'draft'] as const).map((filter) => (
+                            {(['all', 'live', 'draft', 'scheduled'] as const).map((filter) => (
                                 <button
                                     key={filter}
                                     onClick={() => setStatusFilter(filter)}
                                     className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition whitespace-nowrap ${statusFilter === filter
                                         ? 'bg-slate-900 text-white'
                                         : 'bg-slate-50 text-slate-400 hover:text-slate-600'
-                                    }`}
+                                        }`}
                                 >
                                     {filter}
                                 </button>
@@ -279,7 +279,7 @@ export default function Dashboard() {
                                                     className={`w-7 h-7 rounded-lg text-xs font-semibold tracking-wide transition ${currentPage === page
                                                         ? 'bg-blue-600 text-white shadow-sm shadow-blue-100'
                                                         : 'bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {page}
                                                 </button>
@@ -341,11 +341,13 @@ export default function Dashboard() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {/* 👑 NULL STATUS FALLBACK HANDLER */}
-                                                    {test.status === 'live' || test.status === 'draft' ? (
+                                                    {test.status === 'live' || test.status === 'draft' || test.status === 'scheduled' ? (
                                                         <span className={`inline-flex items-center text-[10px] uppercase font-black tracking-wider px-2.5 py-1 rounded-md border ${test.status === 'live'
                                                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                                            : 'bg-amber-50 text-amber-600 border-amber-100'
-                                                        }`}>
+                                                            : test.status === 'scheduled'
+                                                                ? 'bg-violet-50 text-violet-600 border-violet-100'
+                                                                : 'bg-amber-50 text-amber-600 border-amber-100'
+                                                            }`}>
                                                             {test.status}
                                                         </span>
                                                     ) : (
