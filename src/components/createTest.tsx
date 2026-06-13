@@ -269,7 +269,6 @@ export default function CreateTest({
 
   const handleSubTopicMenuFocusFetch = async () => {
     if (selectedTopics.length === 0) return;
-    if (subTopics.length > 0) return;
     setLoading(true);
     try {
       let response;
@@ -616,6 +615,9 @@ export default function CreateTest({
                   setIsTopicMenuOpen(false);
                   const targetNextOpenState = !isSubTopicMenuOpen;
                   setIsSubTopicMenuOpen(targetNextOpenState);
+                  if (targetNextOpenState) {
+                    handleSubTopicMenuFocusFetch();
+                  }
                 }}
                 className={`w-full flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 text-left text-sm sm:text-base transition ${selectedTopics.length === 0 ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-white text-slate-700'}`}
               >
